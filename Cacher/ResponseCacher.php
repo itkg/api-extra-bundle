@@ -79,7 +79,7 @@ class ResponseCacher implements ResponseCacherInterface
      */
     private function createCacheableData(Request $request, array $params = array(), $content = null)
     {
-        $cacheableData = new CacheableData($this->createKeyFromRequest($request, $params), isset($params['duration']) ?: null, $content);
+        $cacheableData = new CacheableData($this->createKeyFromRequest($request, $params), isset($params['duration']) ? $params['duration'] : null, $content);
         $request->attributes->set('cache_key', $cacheableData->getHashKey());
 
         return $cacheableData;
