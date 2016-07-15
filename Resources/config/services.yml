@@ -5,6 +5,9 @@ parameters:
     itkg_api_extra.subscriber.response_cacher.class: Itkg\ApiExtraBundle\EventSubscriber\ResponseCacherSubscriber
     itkg_api_extra.cacher.response.class: Itkg\ApiExtraBundle\Cacher\ResponseCacher
     itkg_api_extra.subscriber.request_cache_reader.class: Itkg\ApiExtraBundle\EventSubscriber\RequestCacheReaderSubscriber
+    itkg_api_extra.cache.tag.tag_manager.class: Itkg\ApiExtraBundle\Cache\Tag\TagManager
+    itkg_api_extra.cache.tag.handler.tag_handler.class: Itkg\ApiExtraBundle\Cache\Tag\Handler\TagHandler
+    itkg_api_extra.subscriber.cache_invalidate.class: Itkg\ApiExtraBundle\EventSubscriber\CacheInvalidateSubscriber
 
 services:
     itkg_api_extra.subscriber.webservice_wrapper:
@@ -14,6 +17,7 @@ services:
             - @controller_resolver
         tags:
             - { name: kernel.event_subscriber }
+
     itkg_api_extra.subscriber.serialization_listener:
         class: %itkg_api_extra.subscriber.serialization_listener.class%
         arguments:
@@ -37,7 +41,7 @@ services:
             - @security.token_storage
             - @security.authorization_checker
             - @itkg_api_extra.cacher.response
-            - %api.route.cached%
+            - %itkg_api_extra.routes%
         tags:
             - { name: kernel.event_subscriber }
 
@@ -47,7 +51,7 @@ services:
                 - @annotation_reader
                 - @controller_resolver
                 - @itkg_api_extra.cacher.response
-                - %api.route.cached%
+                - %itkg_api_extra.routes%
             tags:
                 - { name: kernel.event_subscriber }
 
@@ -55,6 +59,7 @@ services:
         class: %itkg_api_extra.cacher.response.class%
         arguments:
             - @itkg.cache.adapter
+            - @itkg_api_extra.cache.tag.handler.tag_handler
 
     itkg.cache.adapter:
         class: Itkg\Core\Cache\Adapter\Redis
@@ -62,3 +67,21 @@ services:
             - default:
                 host: 172.17.0.2
                 port: 6379
+
+    itkg_api_extra.cache.tag.tag_manager:
+        class: %itkg_api_extra.cache.tag.tag_manager.class%
+        arguments:
+            - @itkg.cache.adapter
+
+    itkg_api_extra.cache.tag.handler.tag_handler:
+        class: %itkg_api_extra.cache.tag.handler.tag_handler.class%
+        arguments:
+            - @itkg_api_extra.cache.tag.tag_manager
+
+    itkg_api_extra.subscriber.cache_invalidate:
+        class: %itkg_api_extra.subscriber.cache_invalidate.class%
+        arguments:
+            - @itkg_api_extra.cache.tag.handler.tag_handler
+            - %itkg_api_extra.tags%
+        tags:
+            - { name: kernel.event_subscriber }

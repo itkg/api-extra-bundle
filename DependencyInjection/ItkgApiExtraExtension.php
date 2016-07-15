@@ -23,6 +23,7 @@ class ItkgApiExtraExtension extends Extension
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
+        $this->loadConfig($container, $config);
     }
 
     /**
@@ -31,8 +32,10 @@ class ItkgApiExtraExtension extends Extension
      */
     protected function loadConfig(ContainerBuilder $container, array $config)
     {
-        if (isset($config['routes'])) {
-            $container->setParameter('itkg_api_extra.routes', array_keys($config['routes']));
+        if (isset($config['cache']['routes'])) {
+            $container->setParameter('itkg_api_extra.routes', $config['cache']['routes']);
         }
+
+        $container->setParameter('itkg_api_extra.tags', $config['cache']['tags']);
     }
 }
