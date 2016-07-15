@@ -58,20 +58,13 @@ services:
     itkg_api_extra.cacher.response:
         class: %itkg_api_extra.cacher.response.class%
         arguments:
-            - @itkg.cache.adapter
+            - @itkg_api_extra.cache.adapter
             - @itkg_api_extra.cache.tag.handler.tag_handler
-
-    itkg.cache.adapter:
-        class: Itkg\Core\Cache\Adapter\Redis
-        arguments:
-            - default:
-                host: 172.17.0.2
-                port: 6379
 
     itkg_api_extra.cache.tag.tag_manager:
         class: %itkg_api_extra.cache.tag.tag_manager.class%
         arguments:
-            - @itkg.cache.adapter
+            - @itkg_api_extra.cache.adapter
 
     itkg_api_extra.cache.tag.handler.tag_handler:
         class: %itkg_api_extra.cache.tag.handler.tag_handler.class%

@@ -24,6 +24,7 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('cache')
                     ->children()
+                        ->scalarNode('adapter')->end()
                         ->arrayNode('tags')
                             ->useAttributeAsKey('name')
                             ->prototype('array')

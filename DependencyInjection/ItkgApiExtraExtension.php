@@ -37,5 +37,6 @@ class ItkgApiExtraExtension extends Extension
         }
 
         $container->setParameter('itkg_api_extra.tags', $config['cache']['tags']);
+        $container->setParameter('itkg_api_extra.cache.adapter', $config['cache']['adapter']);
     }
 }
