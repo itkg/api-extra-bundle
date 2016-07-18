@@ -2,6 +2,7 @@
 
 namespace Itkg\ApiExtraBundle\Tests\Cache;
 
+use Itkg\ApiExtraBundle\Cache\Tag\Handler\TagHandlerInterface;
 use Itkg\Core\Cache\Adapter\Registry;
 use Itkg\Core\Cache\AdapterInterface;
 use Itkg\ApiExtraBundle\Cacher\ResponseCacher;
@@ -24,11 +25,16 @@ class ResponseCacherTest extends \PHPUnit_Framework_TestCase
      */
     private $cacheAdapter;
 
+    /**
+     * @var TagHandlerInterface
+     */
+    private $tagHandler;
+
     public function setUp()
     {
         $this->cacheAdapter = new Registry();
-        $this->responseCacher = new ResponseCacher($this->cacheAdapter);
-
+        $this->tagHandler = Phake::mock('Itkg\ApiExtraBundle\Cache\Tag\Handler\TagHandlerInterface');
+        $this->responseCacher = new ResponseCacher($this->cacheAdapter, $this->tagHandler);
     }
 
     public function testReadWriteData()
@@ -43,7 +49,9 @@ class ResponseCacherTest extends \PHPUnit_Framework_TestCase
             )
         ));
 
-        $this->responseCacher->writeCache($request, new Response($content));
+        $params = array('tags' => array('version'));
+        $this->responseCacher->writeCache($request, new Response($content), $params);
+        Phake::verify($this->tagHandler)->createTags(array('version' => 2), '/slide-decks/1_2_3');
         $this->assertEquals('my cached data', $this->responseCacher->readCache($request));
         $request = Request::create('/slide-decks/2');
         $request->attributes->add(array(

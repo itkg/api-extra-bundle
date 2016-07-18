@@ -81,32 +81,36 @@ class TagManager implements TagManagerInterface
      */
     public function cleanByTags(array $tags, $intersectionOnly = false)
     {
-        $keysToRemove = array();
-        $tagsToCheck = array();
+        $tagsToCheck = $tagsWildcardToCheck = array();
         foreach ($tags as $tag => $conf) {
-            $tagContainerKey = $this->formatTagKey($tag, '');
-            $item = $this->createItem($tagContainerKey);
-            $keys = unserialize($this->cacheAdapter->get($item));
-            if (!is_array($keys)) $keys = array();
-            foreach ($keys as $key) {
-               if (($conf['type'] === self::STRICT_COMPARISON && $key === $this->formatTagKey($tag, $conf['value']))
-                  || $conf['type'] === self::WILDCARD_COMPARISON && preg_match('#.*'.$this->formatTagKey($tag, $conf['value']).'.*#', $key)) {
-                   $tagsToCheck[$key] = $key;
-               }
+            $tagMatched = false;
+            if ($conf['type'] === self::WILDCARD_COMPARISON) {
+                $tagContainerKey = $this->formatTagKey($tag, '');
+                $item            = $this->createItem($tagContainerKey);
+                $keys            = unserialize($this->cacheAdapter->get($item));
+                if (empty($keys)) {
+                    $keys = array();
+                }
+
+                foreach ($keys as $key) {
+                    if (preg_match('#.*' . $this->formatTagKey($tag, $conf['value']) . '.*#', $key)) {
+                        $tagsWildcardToCheck[$key] = $key;
+                        $tagMatched = true;
+                    }
+                }
+            }
+            if (!$tagMatched) {
+                $key               = $this->formatTagKey($tag, $conf['value']);
+                $tagsToCheck[$key] = $key;
             }
         }
 
-        foreach ($tagsToCheck as $tag) {
-            $item = $this->createItem($tag);
-            $keys = unserialize($this->cacheAdapter->get($item));
-            if (!is_array($keys)) $keys = array();
-            if (empty($keysToRemove)) {
-                $keysToRemove = $keys;
-            } else if($intersectionOnly) {
-                $keysToRemove = array_intersect($keysToRemove, $keys);
-            } else {
-                $keysToRemove = array_merge($keysToRemove, $keys);
-            }
+        $wildcardKeys = $this->getKeysByTags($tagsWildcardToCheck, false);
+        $strictKeys = $this->getKeysByTags($tagsToCheck, $intersectionOnly);
+        if ($intersectionOnly && !empty($wildcardKeys)) {
+            $keysToRemove = array_intersect($strictKeys, $wildcardKeys);
+        } else {
+            $keysToRemove = array_merge($strictKeys, $wildcardKeys);
         }
 
         foreach ($keysToRemove as $key) {
@@ -146,6 +150,35 @@ class TagManager implements TagManagerInterface
         $keys[$tagKey] = $tagKey;
         $item->setDataFromCache(serialize($keys));
         $this->cacheAdapter->set($item);
+    }
+
+    /**
+     * @param array $tags
+     * @param bool  $withIntersection
+     *
+     * @return array
+     */
+    private function getKeysByTags(array $tags, $withIntersection = false)
+    {
+        $index = 0;
+        $keys = array();
+        foreach ($tags as $tag) {
+            $item = $this->createItem($tag);
+            $tagKeys = unserialize($this->cacheAdapter->get($item));
+            if (!is_array($tagKeys)) $tagKeys = array();
+            if($withIntersection) {
+                if ($index === 0) {
+                    $keys = $tagKeys;
+                } else {
+                    $keys = array_intersect($keys, $tagKeys);
+                }
+            } else {
+                $keys = array_merge($keys, $tagKeys);
+            }
+            $index++;
+        }
+
+        return $keys;
     }
 
     /**
