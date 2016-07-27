@@ -9,16 +9,34 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 
 /**
- * Class MhpsApiExtension
+ * Class ItkgApiExtraExtension
  */
-class MhpsApiExtension extends Extension
+class ItkgApiExtraExtension extends Extension
 {
     /**
      * {@inheritDoc}
      */
-    public function load(array $config, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container)
     {
+        $configuration = new Configuration();
+        $config = $this->processConfiguration($configuration, $configs);
+
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
+        $this->loadConfig($container, $config);
+    }
+
+    /**
+     * @param ContainerBuilder $container
+     * @param array            $config
+     */
+    protected function loadConfig(ContainerBuilder $container, array $config)
+    {
+        if (isset($config['cache']['routes'])) {
+            $container->setParameter('itkg_api_extra.routes', $config['cache']['routes']);
+        }
+
+        $container->setParameter('itkg_api_extra.tags', $config['cache']['tags']);
+        $container->setParameter('itkg_api_extra.cache.adapter', $config['cache']['adapter']);
     }
 }

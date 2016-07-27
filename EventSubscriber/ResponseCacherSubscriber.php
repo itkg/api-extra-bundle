@@ -56,13 +56,13 @@ class ResponseCacherSubscriber implements EventSubscriberInterface
      */
     public function cacheData(PostResponseEvent $event)
     {
-        if ($event->getRequest()->query->get('no-cache', null) || $this->tokenStorage->getToken() && $this->authorizationChecker->isGranted('MHPS_SLIDE_DECK_FORCE_PREVIEW')) {
+        if ($event->getRequest()->query->get('no-cache', null)) {
             return;
         }
+
         if (array_key_exists($route = $event->getRequest()->attributes->get('_route'), $this->cachedRoutes)) {
             /** @var Response $response */
             $response = $event->getResponse();
-
             if ($response->getStatusCode() < 400) {
                 if (!$event->getRequest()->attributes->has('cached_data')) {
                     $this->responseCacher->writeCache($event->getRequest(), $event->getResponse(), $this->cachedRoutes[$route]);

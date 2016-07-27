@@ -1,31 +1,33 @@
 parameters:
-    mhps.api.subscriber.webservice_wrapper.class: Itkg\ApiExtraBundle\EventSubscriber\WebserviceWrapperSubscriber
-    mhps.api.subscriber.serialization_listener.class: Itkg\ApiExtraBundle\EventSubscriber\SerializationExceptionSubscriber
-    mhps.api.subscriber.unknown_exception_listener.class: Itkg\ApiExtraBundle\EventSubscriber\UnknownExceptionSubscriber
-    mhps.api.subscriber.media_not_found_exception_listener.class: Itkg\ApiExtraBundle\EventSubscriber\MediaNotFoundExceptionSubscriber
-    open_orchestra_api.controller.http_exception_controller: MhpsApiBundle:Exception:show
-    mhps.api.subscriber.response_cacher.class: Itkg\ApiExtraBundle\EventSubscriber\ResponseCacherSubscriber
-    mhps.api.cacher.response.class: Itkg\ApiExtraBundle\Cacher\ResponseCacher
-    mhps.api.subscriber.request_cache_reader.class: Itkg\ApiExtraBundle\EventSubscriber\RequestCacheReaderSubscriber
+    itkg_api_extra.subscriber.webservice_wrapper.class: Itkg\ApiExtraBundle\EventSubscriber\WebserviceWrapperSubscriber
+    itkg_api_extra.subscriber.serialization_listener.class: Itkg\ApiExtraBundle\EventSubscriber\SerializationExceptionSubscriber
+    itkg_api_extra.subscriber.unknown_exception_listener.class: Itkg\ApiExtraBundle\EventSubscriber\UnknownExceptionSubscriber
+    itkg_api_extra.subscriber.response_cacher.class: Itkg\ApiExtraBundle\EventSubscriber\ResponseCacherSubscriber
+    itkg_api_extra.cacher.response.class: Itkg\ApiExtraBundle\Cacher\ResponseCacher
+    itkg_api_extra.subscriber.request_cache_reader.class: Itkg\ApiExtraBundle\EventSubscriber\RequestCacheReaderSubscriber
+    itkg_api_extra.cache.tag.tag_manager.class: Itkg\ApiExtraBundle\Cache\Tag\TagManager
+    itkg_api_extra.cache.tag.handler.tag_handler.class: Itkg\ApiExtraBundle\Cache\Tag\Handler\TagHandler
+    itkg_api_extra.subscriber.cache_invalidate.class: Itkg\ApiExtraBundle\EventSubscriber\CacheInvalidateSubscriber
 
 services:
-    mhps.api.subscriber.webservice_wrapper:
-        class: %mhps.api.subscriber.webservice_wrapper.class%
-        arguments:
-            - @annotation_reader
-            - @controller_resolver
-        tags:
-            - { name: kernel.event_subscriber }
-    mhps.api.subscriber.serialization_listener:
-        class: %mhps.api.subscriber.serialization_listener.class%
+    itkg_api_extra.subscriber.webservice_wrapper:
+        class: %itkg_api_extra.subscriber.webservice_wrapper.class%
         arguments:
             - @annotation_reader
             - @controller_resolver
         tags:
             - { name: kernel.event_subscriber }
 
-    mhps.api.subscriber.unknown_exception_listener:
-        class: %mhps.api.subscriber.unknown_exception_listener.class%
+    itkg_api_extra.subscriber.serialization_listener:
+        class: %itkg_api_extra.subscriber.serialization_listener.class%
+        arguments:
+            - @annotation_reader
+            - @controller_resolver
+        tags:
+            - { name: kernel.event_subscriber }
+
+    itkg_api_extra.subscriber.unknown_exception_listener:
+        class: %itkg_api_extra.subscriber.unknown_exception_listener.class%
         arguments:
             - @annotation_reader
             - @controller_resolver
@@ -33,35 +35,46 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
-    mhps.api.subscriber.media_not_found_exception_listener:
-        class: %mhps.api.subscriber.media_not_found_exception_listener.class%
-        arguments:
-            - %mhps.media.default_image_path%
-        tags:
-            - { name: kernel.event_subscriber }
-
-    mhps.api.subscriber.response_cacher:
-        class: %mhps.api.subscriber.response_cacher.class%
+    itkg_api_extra.subscriber.response_cacher:
+        class: %itkg_api_extra.subscriber.response_cacher.class%
         arguments:
             - @security.token_storage
             - @security.authorization_checker
-            - @mhps.api.cacher.response
-            - %api.route.cached%
+            - @itkg_api_extra.cacher.response
+            - %itkg_api_extra.routes%
         tags:
             - { name: kernel.event_subscriber }
 
-    mhps.api.subscriber.request_cache_reader:
-            class: %mhps.api.subscriber.request_cache_reader.class%
+    itkg_api_extra.subscriber.request_cache_reader:
+            class: %itkg_api_extra.subscriber.request_cache_reader.class%
             arguments:
                 - @annotation_reader
                 - @controller_resolver
-                - @mhps.api.cacher.response
-                - %api.route.cached%
+                - @itkg_api_extra.cacher.response
+                - %itkg_api_extra.routes%
             tags:
                 - { name: kernel.event_subscriber }
 
-    mhps.api.cacher.response:
-        class: %mhps.api.cacher.response.class%
+    itkg_api_extra.cacher.response:
+        class: %itkg_api_extra.cacher.response.class%
         arguments:
-            - @mhps.cache.adapter
+            - @itkg_api_extra.cache.adapter
+            - @itkg_api_extra.cache.tag.handler.tag_handler
 
+    itkg_api_extra.cache.tag.tag_manager:
+        class: %itkg_api_extra.cache.tag.tag_manager.class%
+        arguments:
+            - @itkg_api_extra.cache.adapter
+
+    itkg_api_extra.cache.tag.handler.tag_handler:
+        class: %itkg_api_extra.cache.tag.handler.tag_handler.class%
+        arguments:
+            - @itkg_api_extra.cache.tag.tag_manager
+
+    itkg_api_extra.subscriber.cache_invalidate:
+        class: %itkg_api_extra.subscriber.cache_invalidate.class%
+        arguments:
+            - @itkg_api_extra.cache.tag.handler.tag_handler
+            - %itkg_api_extra.tags%
+        tags:
+            - { name: kernel.event_subscriber }
