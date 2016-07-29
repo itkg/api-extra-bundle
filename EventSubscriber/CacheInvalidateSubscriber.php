@@ -70,7 +70,6 @@ class CacheInvalidateSubscriber implements EventSubscriberInterface
             $parameters = array_merge($request->request->all(), $request->query->all(), $request->attributes->all());
             foreach ($this->tags as $key => $associatedTag) {
                 foreach ($associatedTag['associated'] as $tag) {
-                    echo $tag.' ';
                     if (isset($parameters[$tag])) {
                         $tags[$key] = array(
                             'value' => $parameters[$tag],
