@@ -81,6 +81,9 @@ class TagManager implements TagManagerInterface
      */
     public function cleanByTags(array $tags, $intersectionOnly = false)
     {
+	if (count($tags) === 1) {
+            $intersectionOnly = false;
+        }
         $tagsToCheck = $tagsWildcardToCheck = array();
         foreach ($tags as $tag => $conf) {
             $tagMatched = false;
