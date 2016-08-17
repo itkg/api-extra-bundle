@@ -112,4 +112,24 @@ class TagManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->adapter->get($item));
         $this->assertFalse($this->adapter->get($item2));
     }
+
+    public function testCleanByTagsWithIntersectOnlyAndWildcardComparisonAndOneTag()
+    {
+        $item = new CacheableData('key2', null, 'toto');
+        $this->adapter->set($item);
+        $item2 = new CacheableData('key3', null, 'toto2');
+        $this->adapter->set($item2);
+        $this->assertEquals('toto', $this->adapter->get($item));
+        $this->manager->addKeyToTag('version', 150, 'key2');
+        $this->manager->addKeyToTag('country', 'FR', 'key2');
+        $this->manager->addKeyToTag('version', 1500, 'key3');
+        $this->manager->addKeyToTag('country', 'FR', 'key3');
+
+        $this->manager->cleanByTags(array('version' => array('value' => 10, 'type' => 'wildcard')), true);
+        $this->assertEquals('toto', $this->adapter->get($item));
+        $this->assertEquals('toto2', $this->adapter->get($item2));
+        $this->manager->cleanByTags(array('version' => array('value' => 150, 'type' => 'wildcard')), true);
+        $this->assertFalse($this->adapter->get($item));
+        $this->assertFalse($this->adapter->get($item2));
+    }
 }
